@@ -12,7 +12,8 @@ class Game():
         self.activePlayer = None
         self.turn = None
         self.gameReady = threading.Event()
-        self.ships = [0,1,2,1,1]
+        self.ships = [0, 1, 2, 1, 1]
+        self.playersReady = 0
 
     def renderBoard(self, player):
 
@@ -34,6 +35,12 @@ class Game():
             for i, p in enumerate(self.players):
                 print(f"assigning player number {i} to {p}")
                 p.playerNumber = i
+            self.gameReady.set()
+
+    def reportReady(self, player):
+        self.playersReady += 1
+        self.gameReady.clear()
+        if self.playersReady == 2:
             self.gameReady.set()
 
     def lock(self, player):

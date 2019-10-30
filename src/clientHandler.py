@@ -78,6 +78,9 @@ class ClientHandler(threading.Thread):
                     print(self.game.boards)
                     break
 
+        self.game.reportReady(self.playerNumber)
+        self.send("Waiting for other player...")
+        self.game.gameReady.wait()
 
         self.running = True
         while self.running:
