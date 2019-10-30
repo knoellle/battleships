@@ -15,7 +15,7 @@ class ClientHandler(threading.Thread):
         self.game.addPlayer(self)
 
     def send(self, string, suffix="\n"):
-        return self.socket.sendall(string.encode())
+        return self.socket.sendall((string + suffix).encode())
 
     def receive(self, maxBytes, strip=True):
         s = self.socket.recv(maxBytes).decode()
@@ -48,7 +48,7 @@ class ClientHandler(threading.Thread):
                 while True:
                     # prompt user with relevant information
                     self.sendBoards()
-                    self.send(f"\nPlace ship of size {size}: ")
+                    self.send(f"\nPlace ship of size {size}: ", suffix="")
                     resp = self.receive(1024).strip()
 
                     # parse input
