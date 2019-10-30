@@ -5,7 +5,9 @@ class Game():
 
     def __init__(self):
         self._lock = threading.Lock()
-        self.boards = [[[" "] * 10] * 10]* 2  # two 10x10 boards
+        self.boardWidth = 10
+        self.boardHeight = 10
+        self.boards = [[[" " for _ in range(self.boardWidth)] for _ in range(self.boardHeight)] for _ in range(2)]  # two 10x10 boards
         self.players = []
         self.activePlayer = None
         self.turn = None
