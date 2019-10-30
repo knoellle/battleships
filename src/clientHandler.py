@@ -46,11 +46,16 @@ class ClientHandler(threading.Thread):
             size = sizeIndex + 1
             for i in range(num):
                 while True:
+                    # prompt user with relevant information
                     self.sendBoards()
                     self.send(f"\nPlace ship of size {size}: ")
                     resp = self.receive(1024).strip()
-                    matches = ex.findall(resp)[0]
-                    print(matches)
+
+                    # parse input
+                    matches = ex.findall(resp)
+                    if len(matches) == 0:
+                        continue
+                    matches = matches[0]
                     if len(matches[0]) != 1 or not matches[1].isdigit():
                         self.send("Invalid input!")
                         continue
@@ -68,14 +73,30 @@ class ClientHandler(threading.Thread):
                     if y0 + h > self.game.boardHeight:
                         self.send("Y coordinate out of range")
                         continue
+
                     self.game.lock(self.playerNumber)
-                    print(x0, y0, w, h)
+
+                    # check whether position is valid
+                    blocked = False
+                    for x in range(max(x0, 0), min(x0 + w, self.game.boardWidth)):
+                        for y in range(max(y0, 0), min(y0 + h, self.game.boardHeight)):
+                            if self.game.boards[self.playerNumber][y][x] == "o":
+                                blocked = True
+                                break
+                        if blocked:
+                            self.send("Invalid position, blocked by another ship")
+                            break
+                    if blocked:
+                        self.game.unlock(self.playerNumber)
+                        continue
+
+                    # place ship
                     for x in range(x0, x0 + w):
                         for y in range(y0, y0 + h):
                             self.game.boards[self.playerNumber][y][x] = "o"
-                            print(f"setting {x}, {y}")
+
                     self.game.unlock(self.playerNumber)
-                    print(self.game.boards)
+
                     break
 
         self.game.reportReady(self.playerNumber)
