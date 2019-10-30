@@ -13,6 +13,9 @@ class ClientHandler(threading.Thread):
         self.playerNumber = None
         self.game.addPlayer(self)
 
+    def send(self, string):
+        self.socket.sendall(string.encode())
+
     def sendBoards(self):
         s = ""
         self.game.lock(self.playerNumber)
@@ -21,14 +24,14 @@ class ClientHandler(threading.Thread):
         self.game.unlock(self.playerNumber)
         for i in range(len(ownBoard)):
             s += f"{i} {ownBoard[i]}   {i} {otherBoard[i]}\n"
-        self.socket.sendall(s.encode())
+        self.send(s.encode())
 
     def run(self):
         # wait for all players to join the game
-        self.socket.sendall(b"Waiting for players to join...\n")
+        self.send("Waiting for players to join...\n")
         self.game.gameReady.wait()
-        self.socket.sendall(b"Players found, game starting now\n")
-        self.socket.sendall(f"You are player {self.playerNumber}\n".encode())
+        self.send("Players found, game starting now\n")
+        self.send(f"You are player {self.playerNumber}\n")
 
         self.sendBoards()
 
