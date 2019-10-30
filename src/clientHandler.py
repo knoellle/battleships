@@ -36,6 +36,18 @@ class ClientHandler(threading.Thread):
             s += f"{rownames[i]} {ownBoard[i]}    {rownames[i]} {otherBoard[i]}\n"
         self.send(s)
 
+    def cellToCoordinates(self, cell):
+        ex = re.compile(r"([a-jA-J])(\d)")
+        matches = ex.findall(cell)
+        if len(matches) == 0:
+            return None
+        matches = matches[0]
+        if len(matches[0]) != 1 or not matches[1].isdigit():
+            return None
+        y = ord(matches[0].lower()) - ord("a")
+        x = int(matches[1])
+        return y, x
+
     def run(self):
         # wait for all players to join the game
         self.send("Waiting for players to join...")
@@ -44,7 +56,6 @@ class ClientHandler(threading.Thread):
         self.send(f"You are player {self.playerNumber}")
 
         # set up boards
-        ex = re.compile(r"([a-jA-J])(\d\d?)(-?)")
         for sizeIndex, num in enumerate(self.game.ships):
             size = sizeIndex + 1
             for i in range(num):
@@ -54,19 +65,19 @@ class ClientHandler(threading.Thread):
                     self.send(f"\nPlace ship of size {size}: ", suffix="")
                     resp = self.receive(1024).strip()
 
+                    if resp == "?" or resp == "help":
+                        pass
+
                     # parse input
-                    matches = ex.findall(resp)
-                    if len(matches) == 0:
+                    coords = self.cellToCoordinates(resp.strip("-"))
+                    if coords is None:
+                        self.send("Invalid coordinates!")
                         continue
-                    matches = matches[0]
-                    if len(matches[0]) != 1 or not matches[1].isdigit():
-                        self.send("Invalid input!")
-                        continue
-                    y0 = ord(matches[0].lower()) - ord("a")
-                    x0 = int(matches[1])
+                    y0, x0 = coords
+
                     w = 1
                     h = 1
-                    if matches[2] == "-":
+                    if resp.endswith("-"):
                         w = size
                     else:
                         h = size
