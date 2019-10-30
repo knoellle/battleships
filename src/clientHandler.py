@@ -24,7 +24,7 @@ class ClientHandler(threading.Thread):
         self.game.unlock(self.playerNumber)
         for i in range(len(ownBoard)):
             s += f"{i} {ownBoard[i]}   {i} {otherBoard[i]}\n"
-        self.send(s.encode())
+        self.send(s)
 
     def run(self):
         # wait for all players to join the game
