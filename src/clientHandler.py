@@ -1,6 +1,8 @@
 import socket
 import threading
 import re
+import random
+import time
 
 
 class ClientHandler(threading.Thread):
@@ -49,6 +51,8 @@ class ClientHandler(threading.Thread):
         return y, x
 
     def run(self):
+        self.running = True
+
         # wait for all players to join the game
         self.send("Waiting for players to join...")
         self.game.gameReady.wait()
@@ -56,31 +60,47 @@ class ClientHandler(threading.Thread):
         self.send(f"You are player {self.playerNumber}")
 
         # set up boards
+        randomize = False
         for sizeIndex, num in enumerate(self.game.ships):
             size = sizeIndex + 1
-            for i in range(num):
-                while True:
+            for _ in range(num):
+                while self.running:
                     # prompt user with relevant information
                     self.sendBoards()
-                    self.send(f"\nPlace ship of size {size}: ", suffix="")
-                    resp = self.receive(1024).strip()
 
-                    if resp == "?" or resp == "help":
-                        pass
-
-                    # parse input
-                    coords = self.cellToCoordinates(resp.strip("-"))
-                    if coords is None:
-                        self.send("Invalid coordinates!")
-                        continue
-                    y0, x0 = coords
-
-                    w = 1
-                    h = 1
-                    if resp.endswith("-"):
-                        w = size
+                    if randomize:
+                        w, h = 1, 1
+                        if random.random() > 0.5:
+                            w = size
+                        else:
+                            h = size
+                        x0 = random.randrange(self.game.boardWidth - w)
+                        y0 = random.randrange(self.game.boardHeight - h)
                     else:
-                        h = size
+                        self.send(f"\nPlace ship of size {size}: ", suffix="")
+                        resp = self.receive(1024)
+
+                        if resp == "?" or resp == "help":
+                            pass
+
+                        if resp.startswith("r"):
+                            randomize = True
+                            continue
+
+                        # parse input
+                        w = 1
+                        h = 1
+                        if resp.endswith("-"):
+                            w = size
+                        else:
+                            h = size
+
+                        coords = self.cellToCoordinates(resp.strip("-"))
+                        if coords is None:
+                            self.send("Invalid coordinates!")
+                            continue
+                        y0, x0 = coords
+
                     if x0 + w > self.game.boardWidth:
                         self.send("X coordinate out of range")
                         continue
@@ -90,24 +110,10 @@ class ClientHandler(threading.Thread):
 
                     self.game.lock(self.playerNumber)
 
-                    # check whether position is valid
-                    blocked = False
-                    for x in range(max(x0-1, 0), min(x0 + w + 1, self.game.boardWidth)):
-                        for y in range(max(y0-1, 0), min(y0 + h + 1, self.game.boardHeight)):
-                            if self.game.boards[self.playerNumber][y][x] == "o":
-                                blocked = True
-                                break
-                        if blocked:
-                            self.send("Invalid position, blocked by another ship")
-                            break
-                    if blocked:
+                    if not self.game.placeShip(y0, x0, h, w):
+                        self.send("Invalid position, blocked by another ship")
                         self.game.unlock(self.playerNumber)
                         continue
-
-                    # place ship
-                    for x in range(x0, x0 + w):
-                        for y in range(y0, y0 + h):
-                            self.game.boards[self.playerNumber][y][x] = "o"
 
                     self.game.unlock(self.playerNumber)
 
@@ -121,27 +127,50 @@ class ClientHandler(threading.Thread):
         self.game.gameReady.wait()
         self.send("\n\nGame starting.")
 
-        while True:
-            if self.game.turn == self.playerNumber:
-                self.game.lock()
+        # continue playing until the game ends
+        while self.running and self.game.result is None:
+            print(f"{self.playerNumber} attempting lock")
+            if self.game.lock(self.playerNumber):
                 self.send("\nYour turn.")
                 while True:
+                    print(f"{self.playerNumber} get user input")
                     self.send("Choose a cell to fire at: ", suffix="")
 
-                    resp = self.socket.recv(1024)
+                    resp = self.receive(1024)
                     coords = self.cellToCoordinates(resp)
                     if coords is None:
                         self.send("Invalid coordinates!")
                         continue
                     y, x = coords
-                    result = game.fire(y, x)
-                    if result = 0:
+                    result = self.game.fire(y, x)
+                    if result == 0:
                         self.send("Miss!")
-                    if result = 1:
+                    if result == 1:
                         self.send("Hit!")
-                    if result = 2:
+                    if result == 2:
                         self.send("Hit and sunk!")
-                self.socket.sendall(data)
+                    if result == 3:
+                        self.send("\nYou won!\n")
+                        self.game.unlock(self.playerNumber)
+                        self.close()
+                        return
+
+                    self.sendBoards()
+                    break
+
+                self.game.turn = 1 - self.playerNumber
+                self.game.unlock(self.playerNumber)
+            else:
+                print(f"{self.playerNumber} else case")
+                print("sleeping")
+                time.sleep(2)
+                print("sleeping done")
+
+        if self.game.result is not None:
+            self.send("\nYou lost!\n")
+            print("{self.playerNumber} lost")
+            self.close()
+            return
 
     def close(self):
         self.running = False
