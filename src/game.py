@@ -23,9 +23,9 @@ class Game():
                 return " "
             return c
 
-        board = ["".join(line) for line in self.boards[player]]
+        board = [" ".join(line) for line in self.boards[player]]
         if player != self.activePlayer:
-            board = ["".join(map(filterShips, line)) for line in board]
+            board = [" ".join(map(filterShips, line)) for line in board]
         return board
 
     def addPlayer(self, player):
