@@ -7,7 +7,8 @@ class Game():
         self._lock = threading.Lock()
         self.boardWidth = 10
         self.boardHeight = 10
-        self.boards = [[[" " for _ in range(self.boardWidth)] for _ in range(self.boardHeight)] for _ in range(2)]  # two 10x10 boards
+        self.boards = [[[" " for _ in range(self.boardWidth)] for _ in range(
+            self.boardHeight)] for _ in range(2)]  # two 10x10 boards
         self.players = []
         self.activePlayer = None
         self.turn = None
@@ -26,7 +27,6 @@ class Game():
         if player != self.activePlayer:
             board = ["".join(map(filterShips, line)) for line in board]
         return board
-
 
     def addPlayer(self, player):
         self.players.append(player)
