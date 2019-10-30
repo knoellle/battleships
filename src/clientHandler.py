@@ -78,8 +78,8 @@ class ClientHandler(threading.Thread):
 
                     # check whether position is valid
                     blocked = False
-                    for x in range(max(x0, 0), min(x0 + w, self.game.boardWidth)):
-                        for y in range(max(y0, 0), min(y0 + h, self.game.boardHeight)):
+                    for x in range(max(x0-1, 0), min(x0 + w + 1, self.game.boardWidth)):
+                        for y in range(max(y0-1, 0), min(y0 + h + 1, self.game.boardHeight)):
                             if self.game.boards[self.playerNumber][y][x] == "o":
                                 blocked = True
                                 break
