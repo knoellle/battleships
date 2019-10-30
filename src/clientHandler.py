@@ -113,14 +113,35 @@ class ClientHandler(threading.Thread):
 
                     break
 
+        # send final version of the board
+        self.sendBoards()
+
         self.game.reportReady(self.playerNumber)
         self.send("Waiting for other player...")
         self.game.gameReady.wait()
+        self.send("\n\nGame starting.")
 
-        self.running = True
-        while self.running:
-            data = self.socket.recv(1024)
-            self.socket.sendall(data)
+        while True:
+            if self.game.turn == self.playerNumber:
+                self.game.lock()
+                self.send("\nYour turn.")
+                while True:
+                    self.send("Choose a cell to fire at: ", suffix="")
+
+                    resp = self.socket.recv(1024)
+                    coords = self.cellToCoordinates(resp)
+                    if coords is None:
+                        self.send("Invalid coordinates!")
+                        continue
+                    y, x = coords
+                    result = game.fire(y, x)
+                    if result = 0:
+                        self.send("Miss!")
+                    if result = 1:
+                        self.send("Hit!")
+                    if result = 2:
+                        self.send("Hit and sunk!")
+                self.socket.sendall(data)
 
     def close(self):
         self.running = False

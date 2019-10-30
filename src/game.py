@@ -41,7 +41,13 @@ class Game():
         self.playersReady += 1
         self.gameReady.clear()
         if self.playersReady == 2:
+            self.turn = 0
             self.gameReady.set()
+
+    def fire(self, y, x):
+        if boards[1-self.activePlayer][y][x] == "o":
+            # hit detected
+            pass
 
     def lock(self, player):
         if self.turn is None:
