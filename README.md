@@ -2,7 +2,7 @@
 A socket based server that allows players to connect via telnet to play a game of [battleships](https://en.wikipedia.org/wiki/Battleships_(game)). This project is loosely based on a university course project where students were supposed to create a Tic Tac Toe game server. 
 
 # User guide
-After starting the `server.py` in your favorite python(3) environment, simply connect to your machine's IP at port 9999 (using .
+After starting the `server.py` in your favorite python(3) environment, simply connect to your machine's IP at port 9999 (using telnet for example).
 Once a second connection is established, the board setup phase begins and the players can place their ships.
 
 ## Board Setup Phase 
