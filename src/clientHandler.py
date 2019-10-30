@@ -24,13 +24,16 @@ class ClientHandler(threading.Thread):
         return s
 
     def sendBoards(self):
+        rownames = "ABCDEFGHIJ"
         s = ""
         self.game.lock(self.playerNumber)
         ownBoard = self.game.renderBoard(self.playerNumber)
         otherBoard = self.game.renderBoard(1 - self.playerNumber)
         self.game.unlock(self.playerNumber)
+        colnames = " ".join(map(str, range(0, 10)))
+        s += "  " + colnames + "      " + colnames + "\n"
         for i in range(len(ownBoard)):
-            s += f"{i} {ownBoard[i]}   {i} {otherBoard[i]}\n"
+            s += f"{rownames[i]} {ownBoard[i]}    {rownames[i]} {otherBoard[i]}\n"
         self.send(s)
 
     def run(self):
