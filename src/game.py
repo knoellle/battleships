@@ -22,7 +22,7 @@ class Game():
 
         def filterShips(c):
             if c == "o":
-                return c #" "
+                return " "
             return c
 
         if player != self.activePlayer:
